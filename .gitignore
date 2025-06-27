@@ -51,3 +51,7 @@ dashboard.yml.bak
 *.log
 .pytest_cache/
 htmlcov/ 
+SUPER_EASY_INSTRUCTIONS.md
+WINDOWS_INSTALL_GUIDE.md
+install_dashtrash_windows.bat
+super_easy_install.bat
