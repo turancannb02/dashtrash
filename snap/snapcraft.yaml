@@ -1,0 +1,63 @@
+name: dashtrash
+base: core22
+version: '0.1.0'
+summary: Terminal-based dashboard for real-time monitoring
+description: |
+  dashtrash is a terminal-based dashboard UI built entirely in the command line 
+  for real-time monitoring of system metrics, logs, and custom data sources — 
+  without relying on external SaaS dashboards or heavy GUI tools.
+  
+  Features:
+  - Real-time system monitoring (CPU, Memory, Disk, Network)
+  - Live log viewer with filters and highlighting  
+  - Plugin support for custom integrations
+  - YAML-based configuration
+  - ASCII banner and terminal art
+  - Modular and extensible architecture
+
+grade: stable
+confinement: strict
+
+apps:
+  dashtrash:
+    command: bin/dashtrash
+    environment:
+      PATH: $SNAP/bin:$PATH
+      PYTHONPATH: $SNAP/lib/python3.10/site-packages
+    plugs:
+      - home
+      - network
+      - network-bind
+      - system-observe
+      - mount-observe
+      - hardware-observe
+      - process-control
+
+parts:
+  dashtrash:
+    plugin: python
+    source: .
+    python-requirements:
+      - requirements.txt
+    stage-packages:
+      - python3-pip
+    override-build: |
+      craftctl default
+      # Ensure the entry point is executable
+      chmod +x $CRAFTCTL_PART_INSTALL/bin/dashtrash
+
+plugs:
+  home:
+    interface: home
+  network:
+    interface: network
+  network-bind:
+    interface: network-bind
+  system-observe:
+    interface: system-observe
+  mount-observe:
+    interface: mount-observe
+  hardware-observe:
+    interface: hardware-observe
+  process-control:
+    interface: process-control 

@@ -1,0 +1,16 @@
+panels:
+  - type: system
+    position: top
+    refresh_interval: 2
+  - type: logs
+    file: ~/.zsh_history
+    filters: ["python", "git", "cd"]
+    max_lines: 20
+    position: bottom
+
+banner:
+  text: "DashTrash"
+  font: "ANSI Shadow"
+  tagline: "Real-time dashboards. Questionable aesthetics."
+
+refresh_rate: 1.0 

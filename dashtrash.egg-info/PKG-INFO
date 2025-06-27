@@ -1,0 +1,331 @@
+Metadata-Version: 2.4
+Name: dashtrash
+Version: 0.1.0
+Summary: Terminal-based dashboard for real-time monitoring. Real-time dashboards. Questionable aesthetics.
+Author-email: dashtrash contributors <info@dashtrash.dev>
+Maintainer-email: dashtrash contributors <info@dashtrash.dev>
+License: MIT License
+        
+        Copyright (c) 2024 dashtrash contributors
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE. 
+Project-URL: Homepage, https://github.com/yourusername/dashtrash
+Project-URL: Documentation, https://github.com/yourusername/dashtrash#readme
+Project-URL: Repository, https://github.com/yourusername/dashtrash.git
+Project-URL: Bug Tracker, https://github.com/yourusername/dashtrash/issues
+Keywords: dashboard,monitoring,terminal,cli,tui,system,logs
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: System Administrators
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: System :: Monitoring
+Classifier: Topic :: System :: Systems Administration
+Classifier: Topic :: Terminals
+Classifier: Topic :: Utilities
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: rich>=13.0.0
+Requires-Dist: psutil>=5.9.0
+Requires-Dist: pyfiglet>=0.8.0
+Requires-Dist: PyYAML>=6.0
+Requires-Dist: textual>=0.41.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: black>=22.0.0; extra == "dev"
+Requires-Dist: flake8>=4.0.0; extra == "dev"
+Requires-Dist: mypy>=0.991; extra == "dev"
+Dynamic: license-file
+
+# 🗑️ dashtrash
+
+> **Real-time dashboards. Questionable aesthetics.**
+
+A terminal-based dashboard UI built entirely in the command line for real-time monitoring of system metrics, logs, and custom data sources — without relying on external SaaS dashboards or heavy GUI tools.
+
+## ✨ Features
+
+- 📊 **Real-time system monitoring** (CPU, Memory, Disk, Network)
+- 📁 **Live log viewer** with filters and highlighting
+- 🔌 **Plugin support** for Docker, APIs, databases, etc.
+- ⚙️ **YAML-based configuration** for easy customization
+- 🖼️ **ASCII banner** and terminal art on startup
+- 🧩 **Modular and extensible** - easy to add custom panels
+
+## 🚀 Quick Start
+
+### Option 1: Install via pip (Recommended)
+
+```bash
+# Install globally
+pip install dashtrash
+
+# Or install for current user only
+pip install --user dashtrash
+
+# Run it!
+dashtrash
+```
+
+### Option 2: One-liner install script
+
+```bash
+curl -sSL https://raw.githubusercontent.com/yourusername/dashtrash/main/install.sh | bash
+```
+
+### Option 3: Install via Homebrew (macOS/Linux)
+
+```bash
+brew tap yourusername/dashtrash
+brew install dashtrash
+```
+
+### Option 4: Development setup
+
+```bash
+git clone https://github.com/yourusername/dashtrash.git
+cd dashtrash
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install in development mode
+pip install -e .
+
+# Run it!
+dashtrash
+```
+
+### Quick Commands
+
+```bash
+# Run with default configuration
+dashtrash
+
+# Create and customize your config
+dashtrash --create-config
+dashtrash --validate
+
+# Run with custom config
+dashtrash -c my-dashboard.yml
+
+# Show help
+dashtrash --help
+```
+
+### 3. Exit the Dashboard
+
+Press `Ctrl+C` to exit the dashboard gracefully.
+
+## ⚙️ Configuration
+
+dashtrash uses a simple YAML configuration file (`dashboard.yml`):
+
+```yaml
+panels:
+  - type: system
+    position: top
+    refresh_interval: 2
+  - type: logs
+    file: ~/.zsh_history
+    filters: ["python", "git", "cd"]
+    max_lines: 20
+    position: bottom
+
+banner:
+  text: "DashTrash"
+  font: "ANSI Shadow"
+  tagline: "Real-time dashboards. Questionable aesthetics."
+
+refresh_rate: 1.0
+```
+
+### Panel Types
+
+#### System Panel
+Monitors CPU, memory, disk, and network usage:
+```yaml
+- type: system
+  refresh_interval: 2
+  position: top
+```
+
+#### Logs Panel
+Live log monitoring with filtering:
+```yaml
+- type: logs
+  file: /var/log/syslog
+  filters: ["ERROR", "WARNING", "INFO"]
+  max_lines: 20
+  position: bottom
+```
+
+#### Plugin Panel
+Custom plugins for extended functionality:
+```yaml
+- type: plugin
+  plugin_name: demo
+  refresh_interval: 5
+  position: right
+```
+
+## 🔌 Plugin Development
+
+Create custom plugins by adding Python files to `dashboard/plugins/`:
+
+```python
+# dashboard/plugins/my_plugin.py
+
+def fetch():
+    """Fetch data for your plugin"""
+    return {
+        "status": "online",
+        "users": 42,
+        "uptime": "5 days"
+    }
+
+def render(data):
+    """Render the data"""
+    from rich.text import Text
+    content = Text()
+    content.append(f"Status: {data['status']}\n", style="green")
+    content.append(f"Users: {data['users']}\n", style="blue")
+    content.append(f"Uptime: {data['uptime']}", style="yellow")
+    return content
+
+def initialize(config):
+    """Optional: Initialize with config"""
+    return True
+
+def cleanup():
+    """Optional: Cleanup resources"""
+    pass
+```
+
+Then add it to your `dashboard.yml`:
+```yaml
+- type: plugin
+  plugin_name: my_plugin
+  refresh_interval: 10
+```
+
+## 📁 Project Structure
+
+```
+dashtrash/
+├── dashboard/
+│   ├── __init__.py
+│   ├── banner.py          # ASCII art and startup display
+│   ├── config.py          # YAML configuration handling
+│   ├── core.py            # Main dashboard engine
+│   ├── panels/
+│   │   ├── __init__.py
+│   │   ├── system.py      # System metrics panel
+│   │   └── logs.py        # Log viewer panel
+│   └── plugins/
+│       ├── __init__.py    # Plugin management
+│       └── demo.py        # Example plugin
+├── dashboard.yml          # Configuration file
+├── main.py               # Entry point
+├── requirements.txt      # Dependencies
+└── README.md            # This file
+```
+
+## 🛠️ CLI Commands
+
+```bash
+# Show help
+python main.py --help
+
+# Create default configuration
+python main.py --create-config
+
+# Validate configuration
+python main.py --validate
+
+# Run with custom config
+python main.py -c custom.yml
+
+# Show version
+python main.py --version
+```
+
+## 🎨 Customization
+
+### ASCII Banner
+Customize the startup banner in `dashboard.yml`:
+```yaml
+banner:
+  text: "MyDash"
+  font: "ansi_shadow"  # or "standard", "big", etc.
+  tagline: "My custom dashboard"
+```
+
+### Panel Positioning
+Control where panels appear:
+- `top` - Upper area
+- `bottom` - Lower area
+- `left` - Left side (multi-panel layouts)
+- `right` - Right side (multi-panel layouts)
+
+### Colors and Styling
+Panels automatically color-code based on status:
+- 🟢 Green: Normal/Good (< 50% usage)
+- 🟡 Yellow: Warning (50-80% usage)
+- 🔴 Red: Critical (> 80% usage)
+
+## 🧭 Why dashtrash?
+
+Because not every monitoring tool should:
+- ❌ Require a web server or database
+- ❌ Send data to the cloud
+- ❌ Make you open 4 different terminal tabs
+- ❌ Cost money for basic monitoring
+
+dashtrash gives you:
+- ✅ **Terminal-first design** - Stay in the CLI
+- ✅ **Zero dependencies** beyond Python packages
+- ✅ **Highly configurable** with simple YAML
+- ✅ **Modular & pluggable** - Extend easily
+- ✅ **No telemetry, no SaaS, no bloat**
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+MIT License - see LICENSE file for details.
+
+---
+
+**Real-time dashboards. Questionable aesthetics.** 🗑️✨ 

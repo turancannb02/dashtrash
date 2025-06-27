@@ -1,0 +1,7 @@
+include README.md
+include LICENSE
+include requirements.txt
+include dashboard.yml
+recursive-include dashtrash *.py
+recursive-include dashtrash *.yml
+recursive-include dashtrash *.yaml 
