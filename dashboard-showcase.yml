@@ -1,0 +1,45 @@
+# dashtrash showcase configuration
+# This demonstrates various panel combinations and layouts
+
+panels:
+  # Main system monitoring (always useful)
+  - type: system
+    position: top
+    refresh_interval: 2
+    
+  # Temperature monitoring for performance enthusiasts
+  - type: temperature
+    position: left
+    refresh_interval: 3
+    
+  # Clock with personality for time awareness
+  - type: clock
+    position: right
+    refresh_interval: 1
+    time_format: "24h"        # or "12h" for AM/PM
+    show_timezone: true
+    show_uptime: true
+    
+  # Optional: Log monitoring (uncomment to enable)
+  # - type: logs
+  #   file: /var/log/system.log
+  #   filters: ["ERROR", "WARNING", "INFO"]
+  #   max_lines: 15
+  #   position: bottom
+  
+  # Optional: Plugin example (uncomment to enable)
+  # - type: plugin
+  #   plugin_name: demo
+  #   refresh_interval: 5
+  #   position: bottom
+
+banner:
+  text: "DashTrash"
+  font: "ANSI Shadow"
+  tagline: "Real-time dashboards. Questionable aesthetics."
+
+# Global refresh rate (can be overridden per panel)
+refresh_rate: 1.0
+
+# Available positions: top, bottom, left, right, main
+# Available panel types: system, temperature, clock, logs, plugin 

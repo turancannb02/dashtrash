@@ -108,19 +108,11 @@ class ClockPanel:
         info_table.add_column("Label", style="dim", width=10)
         info_table.add_column("Value", style="bold", width=20)
         
-        info_table.add_row("📅 Date:", data['date'])
-        
-        if self.show_timezone:
-            info_table.add_row("🌍 Zone:", data['timezone'])
-        
-        if self.show_uptime:
-            info_table.add_row("⏳ Uptime:", data['uptime'])
-        
-        # Create a fun day indicator
+        # Create a fun day indicator with enhanced styling
         weekday = data['weekday']
         day_indicators = {
             'Monday': '😴 Monday Blues',
-            'Tuesday': '💪 Tuesday Grind',
+            'Tuesday': '💪 Tuesday Grind', 
             'Wednesday': '🐪 Hump Day',
             'Thursday': '🚀 Almost There',
             'Friday': '🎉 FRIDAY!',
@@ -129,12 +121,23 @@ class ClockPanel:
         }
         
         day_vibe = day_indicators.get(weekday, f"✨ {weekday}")
-        info_table.add_row("✨ Vibe:", day_vibe)
         
-        # Time zone indicator
+        # Enhanced info display
+        info_table.add_row("📅 Date:", f"[bold cyan]{data['date']}[/bold cyan]")
+        
+        if self.show_timezone:
+            info_table.add_row("🌍 Zone:", f"[bold green]{data['timezone']}[/bold green]")
+        
+        if self.show_uptime:
+            info_table.add_row("⏳ Uptime:", f"[bold yellow]{data['uptime']}[/bold yellow]")
+        
+        info_table.add_row("✨ Vibe:", f"[bold magenta]{day_vibe}[/bold magenta]")
+        
+        # Enhanced time display
         time_text = Text()
         time_text.append(f"{time_emoji} ", style="bold")
         time_text.append(data['time'], style="bold cyan")
+        time_text.append(" ✨", style="yellow")
         
         # Combine ASCII time with info
         content = Group(

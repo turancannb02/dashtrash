@@ -197,8 +197,9 @@ class SystemPanel:
         cpu_color = self._get_status_color(data['cpu']['percent'])
         cpu_chart = self._create_mini_chart(data['cpu']['history'])
         cpu_bar = self._create_progress_bar(data['cpu']['percent'])
+        cpu_icon = "🔥" if data['cpu']['percent'] > 80 else "⚡" if data['cpu']['percent'] > 50 else "💻"
         table.add_row(
-            "🖥️  CPU",
+            f"{cpu_icon} CPU",
             cpu_bar,
             f"[{cpu_color}]{cpu_chart}[/{cpu_color}]",
             f"{data['cpu']['count']} cores @ {data['cpu']['frequency']:.0f}MHz"
@@ -208,8 +209,9 @@ class SystemPanel:
         mem_color = self._get_status_color(data['memory']['percent'])
         mem_chart = self._create_mini_chart(data['memory']['history'])
         mem_bar = self._create_progress_bar(data['memory']['percent'])
+        mem_icon = "🚨" if data['memory']['percent'] > 90 else "⚠️" if data['memory']['percent'] > 75 else "🧠"
         table.add_row(
-            "🧠 RAM",
+            f"{mem_icon} RAM",
             mem_bar,
             f"[{mem_color}]{mem_chart}[/{mem_color}]",
             f"{self._format_bytes(data['memory']['used'])} / {self._format_bytes(data['memory']['total'])}"
@@ -219,8 +221,9 @@ class SystemPanel:
         disk_color = self._get_status_color(data['disk']['percent'])
         disk_chart = self._create_mini_chart(data['disk']['history'])
         disk_bar = self._create_progress_bar(data['disk']['percent'])
+        disk_icon = "⛔" if data['disk']['percent'] > 90 else "⚠️" if data['disk']['percent'] > 80 else "💾"
         table.add_row(
-            "💾 Disk",
+            f"{disk_icon} Disk",
             disk_bar,
             f"[{disk_color}]{disk_chart}[/{disk_color}]",
             f"{self._format_bytes(data['disk']['free'])} free"
@@ -229,21 +232,26 @@ class SystemPanel:
         # Network Row
         net_sent_speed = self._format_bytes(data['network']['speed']['sent'])
         net_recv_speed = self._format_bytes(data['network']['speed']['recv'])
-        net_activity = "🔴" if (data['network']['speed']['sent'] + data['network']['speed']['recv']) > 1024 else "🟢"
+        total_speed = data['network']['speed']['sent'] + data['network']['speed']['recv']
+        net_icon = "🚀" if total_speed > 1048576 else "📡" if total_speed > 10240 else "🌐"  # >1MB, >10KB, default
+        net_activity = "🔴" if total_speed > 1024 else "🟢"
         table.add_row(
-            "🌐 Net",
+            f"{net_icon} Net",
             f"↑ {net_sent_speed}/s ↓ {net_recv_speed}/s",
-            f"{net_activity} {'█' * 10}{'░' * 10}",
+            f"{net_activity} {'█' * int(min(total_speed / 1024, 10))}{'░' * (10 - int(min(total_speed / 1024, 10)))}",
             f"Total: {self._format_bytes(data['network']['bytes_sent'] + data['network']['bytes_recv'])}"
         )
 
-        # Create system info footer
+        # Create system info footer with enhanced styling
         load_info = f"Load: {data['cpu']['load_avg'][0]:.2f}" if data['cpu']['load_avg'][0] > 0 else "Load: N/A"
         footer_text = Text()
         footer_text.append("⚡ ", style="yellow")
-        footer_text.append(load_info, style="dim")
+        footer_text.append(load_info, style="bold cyan")
         footer_text.append(" | ", style="dim")
-        footer_text.append(f"Uptime: {self._get_uptime()}", style="dim")
+        footer_text.append("🕐 Uptime: ", style="dim")
+        footer_text.append(f"{self._get_uptime()}", style="bold green")
+        footer_text.append(" | ", style="dim")
+        footer_text.append("🔄 Refreshing...", style="dim italic")
         
         # Combine table and footer
         content = Group(table, "", Align.center(footer_text))

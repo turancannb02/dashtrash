@@ -137,38 +137,47 @@ class TemperaturePanel:
             critical = temp_data['critical']
             color = self._get_temp_color(current, high, critical)
             
-            # Status indicator
+            # Enhanced status indicator with better visuals
             if current >= critical:
-                status = "[red]🔥 HOT[/red]"
+                status = "[red]🔥 CRITICAL[/red]"
+                temp_emoji = "🔥"
             elif current >= high:
-                status = "[yellow]⚠️ WARM[/yellow]"
+                status = "[yellow]⚠️ HOT[/yellow]"
+                temp_emoji = "🌡️"
+            elif current >= high * 0.7:
+                status = "[orange]🔶 WARM[/orange]"
+                temp_emoji = "🟡"
             else:
-                status = "[green]✅ OK[/green]"
+                status = "[green]❄️ COOL[/green]"
+                temp_emoji = "❄️"
             
-            # Create mini chart
+            # Create mini chart with enhanced styling
             chart = self._create_temp_chart(data['history'])
             
-            # Clean up sensor name
-            display_name = sensor_name.replace('_', ' ').title()[:12]
+            # Clean up sensor name with icon
+            display_name = sensor_name.replace('_', ' ').title()[:10]
+            sensor_icon = "💻" if "cpu" in sensor_name.lower() else "🖥️" if "system" in sensor_name.lower() else "🌡️"
             
             table.add_row(
-                display_name,
-                f"[{color}]{self._format_temperature(current)}[/{color}]",
+                f"{sensor_icon} {display_name}",
+                f"[{color}]{temp_emoji} {self._format_temperature(current)}[/{color}]",
                 status,
                 f"[{color}]{chart}[/{color}]",
-                f"{high:.0f}°/{critical:.0f}°"
+                f"[dim]{high:.0f}°/{critical:.0f}°[/dim]"
             )
         
-        # Add average temperature info
+        # Add average temperature info with enhanced styling
         avg_temp = data['average']
         avg_color = self._get_temp_color(avg_temp, 70, 80)
         
         footer_text = Text()
-        footer_text.append("🌡️ Avg: ", style="dim")
-        footer_text.append(f"{avg_temp:.1f}°C", style=avg_color)
+        footer_text.append("🌡️ Avg: ", style="cyan")
+        footer_text.append(f"{avg_temp:.1f}°C", style=f"bold {avg_color}")
         footer_text.append(" | ", style="dim")
-        footer_text.append("Refresh: ", style="dim")
-        footer_text.append(f"{self.refresh_interval}s", style="dim")
+        footer_text.append("🔄 Refresh: ", style="dim")
+        footer_text.append(f"{self.refresh_interval}s", style="bold yellow")
+        footer_text.append(" | ", style="dim")
+        footer_text.append("🎯 Monitoring...", style="dim italic")
         
         # Combine table and footer
         content = Group(table, "", Align.center(footer_text))
