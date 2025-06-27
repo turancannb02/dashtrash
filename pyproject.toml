@@ -7,7 +7,7 @@ name = "dashtrash"
 version = "0.1.0"
 description = "Terminal-based dashboard for real-time monitoring. Real-time dashboards. Questionable aesthetics."
 readme = "README.md"
-license = {file = "LICENSE"}
+license = "MIT"
 authors = [
     {name = "dashtrash contributors", email = "info@dashtrash.dev"}
 ]
@@ -20,7 +20,7 @@ classifiers = [
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Intended Audience :: System Administrators",
-    "License :: OSI Approved :: MIT License",
+
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",

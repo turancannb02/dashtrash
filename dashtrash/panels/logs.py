@@ -1,190 +1,151 @@
 """
-Logs panel for dashtrash - live log viewer with filters and highlighting
+Logs panel for dashtrash - displays real-time log files with filtering
 """
 
 import os
-import re
+import time
 from typing import Dict, Any, List
 from rich.panel import Panel
+from rich.table import Table
 from rich.text import Text
 from rich.console import Console
-from pathlib import Path
+from rich.syntax import Syntax
 
 
 class LogsPanel:
     def __init__(self, config: Dict[str, Any] = None):
         self.config = config or {}
         self.log_file = self.config.get('file', '/var/log/system.log')
-        self.filters = self.config.get('filters', ['ERROR', 'WARNING', 'INFO'])
-        self.max_lines = self.config.get('max_lines', 20)
-        self.refresh_interval = self.config.get('refresh_interval', 1)
-        self._last_position = 0
+        self.max_lines = self.config.get('max_lines', 15)
+        self.filters = self.config.get('filters', [])
+        self.last_position = 0
+        self.console = Console()
 
     def fetch_data(self) -> Dict[str, Any]:
         """Fetch recent log entries"""
         try:
-            if not os.path.exists(self.log_file):
-                return {
-                    'lines': [],
-                    'error': f"Log file not found: {self.log_file}",
-                    'file_info': {'exists': False, 'size': 0}
-                }
+            # Expand user path
+            log_file = os.path.expanduser(self.log_file)
             
-            file_stat = os.stat(self.log_file)
-            file_size = file_stat.st_size
+            if not os.path.exists(log_file):
+                return {'error': f'Log file not found: {log_file}'}
             
-            # If file was truncated, reset position
-            if file_size < self._last_position:
-                self._last_position = 0
+            # Read file from last position
+            with open(log_file, 'r', encoding='utf-8', errors='ignore') as f:
+                f.seek(self.last_position)
+                new_lines = f.readlines()
+                self.last_position = f.tell()
             
-            lines = []
-            with open(self.log_file, 'r', encoding='utf-8', errors='ignore') as f:
-                # Seek to last position or start from end if first read
-                if self._last_position == 0:
-                    # For first read, start from end and read last N lines
-                    lines = self._get_tail_lines(f, self.max_lines)
-                else:
-                    f.seek(self._last_position)
-                    new_lines = f.readlines()
-                    lines = [line.rstrip('\n\r') for line in new_lines]
-                
-                self._last_position = f.tell()
+            # If no new lines, get the last few lines for display
+            if not new_lines:
+                with open(log_file, 'r', encoding='utf-8', errors='ignore') as f:
+                    all_lines = f.readlines()
+                    new_lines = all_lines[-self.max_lines:] if all_lines else []
             
-            # Filter lines based on configured filters
-            filtered_lines = self._filter_lines(lines)
+            # Filter lines if filters are specified
+            if self.filters:
+                filtered_lines = []
+                for line in new_lines:
+                    for filter_term in self.filters:
+                        if filter_term.lower() in line.lower():
+                            filtered_lines.append(line)
+                            break
+                new_lines = filtered_lines
             
             # Keep only the most recent lines
-            if len(filtered_lines) > self.max_lines:
-                filtered_lines = filtered_lines[-self.max_lines:]
+            recent_lines = new_lines[-self.max_lines:] if new_lines else []
             
             return {
-                'lines': filtered_lines,
-                'file_info': {
-                    'path': self.log_file,
-                    'exists': True,
-                    'size': file_size,
-                    'lines_count': len(filtered_lines)
-                }
+                'lines': [line.rstrip() for line in recent_lines],
+                'file': log_file,
+                'total_lines': len(recent_lines),
+                'filters_active': len(self.filters) > 0
             }
             
         except Exception as e:
-            return {
-                'lines': [],
-                'error': str(e),
-                'file_info': {'exists': False, 'size': 0}
-            }
+            return {'error': str(e)}
 
-    def _get_tail_lines(self, file_obj, num_lines: int) -> List[str]:
-        """Get the last N lines from a file efficiently"""
-        try:
-            file_obj.seek(0, 2)  # Go to end of file
-            file_size = file_obj.tell()
-            
-            # If file is empty
-            if file_size == 0:
-                return []
-            
-            # Start from end and work backwards
-            lines = []
-            buffer_size = 8192
-            position = file_size
-            
-            while len(lines) < num_lines and position > 0:
-                # Calculate how much to read
-                read_size = min(buffer_size, position)
-                position -= read_size
-                
-                file_obj.seek(position)
-                chunk = file_obj.read(read_size)
-                
-                # Split into lines and prepend to our list
-                chunk_lines = chunk.split('\n')
-                
-                # Handle partial line at the beginning
-                if position > 0:
-                    chunk_lines = chunk_lines[1:]  # Remove incomplete first line
-                
-                # Reverse and add to beginning of lines list
-                chunk_lines.reverse()
-                lines = chunk_lines + lines
-            
-            # Clean up and return requested number of lines
-            lines = [line.rstrip('\r') for line in lines if line.strip()]
-            return lines[-num_lines:] if len(lines) > num_lines else lines
-            
-        except Exception:
-            # Fallback: read entire file and get last lines
-            file_obj.seek(0)
-            all_lines = file_obj.readlines()
-            return [line.rstrip('\n\r') for line in all_lines[-num_lines:]]
-
-    def _filter_lines(self, lines: List[str]) -> List[str]:
-        """Filter log lines based on configured filters"""
-        if not self.filters:
-            return lines
+    def _colorize_log_line(self, line: str) -> Text:
+        """Add colors to log lines based on content"""
+        text = Text()
         
-        filtered = []
-        filter_pattern = '|'.join(re.escape(f) for f in self.filters)
+        # Color coding based on log level/content
+        line_lower = line.lower()
         
-        for line in lines:
-            if re.search(filter_pattern, line, re.IGNORECASE):
-                filtered.append(line)
-        
-        return filtered
-
-    def _highlight_line(self, line: str) -> Text:
-        """Apply syntax highlighting to log lines"""
-        text = Text(line)
-        
-        # Color coding based on log level
-        line_upper = line.upper()
-        if 'ERROR' in line_upper or 'FATAL' in line_upper:
-            text.stylize("bold red")
-        elif 'WARNING' in line_upper or 'WARN' in line_upper:
-            text.stylize("bold yellow")
-        elif 'INFO' in line_upper:
-            text.stylize("bold blue")
-        elif 'DEBUG' in line_upper:
-            text.stylize("dim cyan")
+        if any(word in line_lower for word in ['error', 'err', 'failed', 'failure']):
+            text.append(line, style="bold red")
+        elif any(word in line_lower for word in ['warning', 'warn', 'deprecated']):
+            text.append(line, style="bold yellow")
+        elif any(word in line_lower for word in ['info', 'information']):
+            text.append(line, style="bold blue")
+        elif any(word in line_lower for word in ['debug', 'trace']):
+            text.append(line, style="dim")
+        elif any(word in line_lower for word in ['success', 'completed', 'ok']):
+            text.append(line, style="bold green")
+        elif 'python' in line_lower:
+            text.append(line, style="bold magenta")
+        elif 'git' in line_lower:
+            text.append(line, style="bold cyan")
         else:
-            text.stylize("white")
+            text.append(line, style="white")
         
         return text
+
+    def _create_log_entry(self, line: str, index: int) -> str:
+        """Format a single log entry with timestamp and styling"""
+        timestamp = time.strftime("%H:%M:%S")
+        
+        # Truncate long lines
+        if len(line) > 80:
+            line = line[:77] + "..."
+        
+        return f"[dim]{timestamp}[/dim] {line}"
 
     def render(self, data: Dict[str, Any]) -> Panel:
         """Render the logs panel"""
         if 'error' in data:
-            error_text = Text()
-            error_text.append(f"Error reading logs: {data['error']}\n", style="bold red")
-            error_text.append(f"File: {self.log_file}", style="dim")
-            return Panel(error_text, title="[bold red]Logs - Error[/bold red]", border_style="red")
+            return Panel(f"[red]Error: {data['error']}[/red]", title="[bold red]Logs - Error[/bold red]")
+
+        lines = data.get('lines', [])
         
-        # Create content
-        content = Text()
-        
-        if not data['lines']:
-            content.append("No log entries found matching filters", style="dim yellow")
+        if not lines:
+            content = Text("No log entries found", style="dim italic")
         else:
-            for i, line in enumerate(data['lines']):
-                if i > 0:
+            content_lines = []
+            
+            for i, line in enumerate(lines):
+                if line.strip():  # Skip empty lines
+                    colored_line = self._colorize_log_line(line)
+                    content_lines.append(colored_line)
+            
+            # Join lines with newlines
+            content = Text()
+            for i, line in enumerate(content_lines):
+                content.append_text(line)
+                if i < len(content_lines) - 1:
                     content.append("\n")
-                highlighted_line = self._highlight_line(line)
-                content.append(highlighted_line)
-        
+
         # Create title with file info
-        file_info = data.get('file_info', {})
-        title_parts = ["[bold green]Logs[/bold green]"]
+        file_name = os.path.basename(data.get('file', 'unknown'))
+        filter_info = f" | Filtered" if data.get('filters_active') else ""
+        title = f"[bold green]📜 Logs: {file_name}[/bold green][dim]{filter_info}[/dim]"
         
-        if file_info.get('exists'):
-            title_parts.append(f" - {Path(self.log_file).name}")
-            if 'lines_count' in file_info:
-                title_parts.append(f" ({file_info['lines_count']} lines)")
-        
-        title = "".join(title_parts)
-        
+        # Add footer with stats
+        stats_text = Text()
+        stats_text.append(f"📊 {data.get('total_lines', 0)} lines", style="dim")
+        if self.filters:
+            stats_text.append(f" | Filters: {', '.join(self.filters)}", style="dim yellow")
+
+        # Combine content and stats
+        full_content = Text()
+        full_content.append_text(content)
+        full_content.append("\n\n")
+        full_content.append_text(stats_text)
+
         return Panel(
-            content,
+            full_content,
             title=title,
             border_style="green",
-            subtitle=f"Filters: {', '.join(self.filters)}" if self.filters else None
+            padding=(1, 2),
+            height=self.max_lines + 6  # Extra space for padding and stats
         ) 

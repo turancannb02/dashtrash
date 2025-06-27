@@ -4,12 +4,14 @@ System panel for dashtrash - monitors CPU, memory, disk, and network metrics
 
 import psutil
 import time
-from typing import Dict, Any
+from typing import Dict, Any, List
 from rich.panel import Panel
 from rich.table import Table
-from rich.progress import Progress, BarColumn, TextColumn
+from rich.progress import Progress, BarColumn, TextColumn, SpinnerColumn
 from rich.text import Text
 from rich.console import Console
+from rich.columns import Columns
+from rich.align import Align
 
 
 class SystemPanel:
@@ -19,6 +21,11 @@ class SystemPanel:
         self.console = Console()
         self._last_net_io = None
         self._last_time = None
+        
+        # History for mini charts (keep last 20 readings)
+        self._cpu_history = []
+        self._memory_history = []
+        self._disk_history = []
 
     def fetch_data(self) -> Dict[str, Any]:
         """Fetch current system metrics"""
@@ -26,6 +33,7 @@ class SystemPanel:
             # CPU usage
             cpu_percent = psutil.cpu_percent(interval=0.1)
             cpu_count = psutil.cpu_count()
+            cpu_freq = psutil.cpu_freq()
             
             # Memory usage
             memory = psutil.virtual_memory()
@@ -44,23 +52,30 @@ class SystemPanel:
                 # Windows doesn't have load average
                 load_avg = (0, 0, 0)
             
+            # Update history
+            self._update_history(cpu_percent, memory.percent, (disk.used / disk.total) * 100)
+            
             return {
                 'cpu': {
                     'percent': cpu_percent,
                     'count': cpu_count,
-                    'load_avg': load_avg
+                    'frequency': cpu_freq.current if cpu_freq else 0,
+                    'load_avg': load_avg,
+                    'history': self._cpu_history.copy()
                 },
                 'memory': {
                     'total': memory.total,
                     'used': memory.used,
                     'percent': memory.percent,
-                    'available': memory.available
+                    'available': memory.available,
+                    'history': self._memory_history.copy()
                 },
                 'disk': {
                     'total': disk.total,
                     'used': disk.used,
                     'free': disk.free,
-                    'percent': (disk.used / disk.total) * 100
+                    'percent': (disk.used / disk.total) * 100,
+                    'history': self._disk_history.copy()
                 },
                 'network': {
                     'bytes_sent': net_io.bytes_sent,
@@ -70,6 +85,22 @@ class SystemPanel:
             }
         except Exception as e:
             return {'error': str(e)}
+
+    def _update_history(self, cpu_percent: float, memory_percent: float, disk_percent: float):
+        """Update historical data for mini charts"""
+        max_history = 20
+        
+        self._cpu_history.append(cpu_percent)
+        self._memory_history.append(memory_percent)
+        self._disk_history.append(disk_percent)
+        
+        # Keep only last N readings
+        if len(self._cpu_history) > max_history:
+            self._cpu_history = self._cpu_history[-max_history:]
+        if len(self._memory_history) > max_history:
+            self._memory_history = self._memory_history[-max_history:]
+        if len(self._disk_history) > max_history:
+            self._disk_history = self._disk_history[-max_history:]
 
     def _calculate_network_speed(self, current_net_io) -> Dict[str, float]:
         """Calculate network speed in bytes per second"""
@@ -107,48 +138,138 @@ class SystemPanel:
         else:
             return "red"
 
+    def _create_mini_chart(self, data: List[float], max_width: int = 20) -> str:
+        """Create a simple ASCII mini chart"""
+        if not data or len(data) < 2:
+            return "─" * max_width
+        
+        # Normalize data to chart height (0-8 levels)
+        max_val = max(data) if max(data) > 0 else 1
+        min_val = min(data)
+        
+        chart = ""
+        for value in data[-max_width:]:
+            # Normalize to 0-8 range
+            normalized = int((value - min_val) / (max_val - min_val) * 8) if max_val > min_val else 0
+            
+            # Use block characters for different levels
+            if normalized <= 1:
+                chart += "▁"
+            elif normalized <= 2:
+                chart += "▂"
+            elif normalized <= 3:
+                chart += "▃"
+            elif normalized <= 4:
+                chart += "▄"
+            elif normalized <= 5:
+                chart += "▅"
+            elif normalized <= 6:
+                chart += "▆"
+            elif normalized <= 7:
+                chart += "▇"
+            else:
+                chart += "█"
+        
+        return chart
+
+    def _create_progress_bar(self, percent: float, width: int = 20) -> str:
+        """Create a visual progress bar"""
+        filled = int((percent / 100) * width)
+        empty = width - filled
+        color = self._get_status_color(percent)
+        
+        bar = "█" * filled + "░" * empty
+        return f"[{color}]{bar}[/{color}] {percent:.1f}%"
+
     def render(self, data: Dict[str, Any]) -> Panel:
-        """Render the system metrics panel"""
+        """Render the system metrics panel with real-time charts"""
         if 'error' in data:
             return Panel(f"[red]Error: {data['error']}[/red]", title="[bold red]System Metrics - Error[/bold red]")
 
-        # Create table for system metrics
-        table = Table(show_header=True, header_style="bold blue", box=None)
-        table.add_column("Metric", style="cyan", width=15)
-        table.add_column("Usage", width=20)
-        table.add_column("Details", style="dim")
+        # Create main metrics table
+        table = Table(show_header=True, header_style="bold blue", box=None, padding=(0, 1))
+        table.add_column("Metric", style="cyan", width=10)
+        table.add_column("Usage", width=25)
+        table.add_column("Chart", width=22)
+        table.add_column("Details", style="dim", width=25)
 
-        # CPU
+        # CPU Row
         cpu_color = self._get_status_color(data['cpu']['percent'])
+        cpu_chart = self._create_mini_chart(data['cpu']['history'])
+        cpu_bar = self._create_progress_bar(data['cpu']['percent'])
         table.add_row(
-            "CPU",
-            f"[{cpu_color}]{data['cpu']['percent']:.1f}%[/{cpu_color}]",
-            f"{data['cpu']['count']} cores | Load: {data['cpu']['load_avg'][0]:.2f}"
+            "🖥️  CPU",
+            cpu_bar,
+            f"[{cpu_color}]{cpu_chart}[/{cpu_color}]",
+            f"{data['cpu']['count']} cores @ {data['cpu']['frequency']:.0f}MHz"
         )
 
-        # Memory
+        # Memory Row
         mem_color = self._get_status_color(data['memory']['percent'])
+        mem_chart = self._create_mini_chart(data['memory']['history'])
+        mem_bar = self._create_progress_bar(data['memory']['percent'])
         table.add_row(
-            "Memory",
-            f"[{mem_color}]{data['memory']['percent']:.1f}%[/{mem_color}]",
+            "🧠 RAM",
+            mem_bar,
+            f"[{mem_color}]{mem_chart}[/{mem_color}]",
             f"{self._format_bytes(data['memory']['used'])} / {self._format_bytes(data['memory']['total'])}"
         )
 
-        # Disk
+        # Disk Row
         disk_color = self._get_status_color(data['disk']['percent'])
+        disk_chart = self._create_mini_chart(data['disk']['history'])
+        disk_bar = self._create_progress_bar(data['disk']['percent'])
         table.add_row(
-            "Disk",
-            f"[{disk_color}]{data['disk']['percent']:.1f}%[/{disk_color}]",
-            f"{self._format_bytes(data['disk']['used'])} / {self._format_bytes(data['disk']['total'])}"
+            "💾 Disk",
+            disk_bar,
+            f"[{disk_color}]{disk_chart}[/{disk_color}]",
+            f"{self._format_bytes(data['disk']['free'])} free"
         )
 
-        # Network
+        # Network Row
         net_sent_speed = self._format_bytes(data['network']['speed']['sent'])
         net_recv_speed = self._format_bytes(data['network']['speed']['recv'])
+        net_activity = "🔴" if (data['network']['speed']['sent'] + data['network']['speed']['recv']) > 1024 else "🟢"
         table.add_row(
-            "Network",
-            f"↑ {net_sent_speed}/s\n↓ {net_recv_speed}/s",
-            f"Total: ↑ {self._format_bytes(data['network']['bytes_sent'])} ↓ {self._format_bytes(data['network']['bytes_recv'])}"
+            "🌐 Net",
+            f"↑ {net_sent_speed}/s ↓ {net_recv_speed}/s",
+            f"{net_activity} {'█' * 10}{'░' * 10}",
+            f"Total: {self._format_bytes(data['network']['bytes_sent'] + data['network']['bytes_recv'])}"
         )
 
-        return Panel(table, title="[bold green]System Metrics[/bold green]", border_style="green") 
+        # Create system info footer
+        load_info = f"Load: {data['cpu']['load_avg'][0]:.2f}" if data['cpu']['load_avg'][0] > 0 else "Load: N/A"
+        footer_text = Text()
+        footer_text.append("⚡ ", style="yellow")
+        footer_text.append(load_info, style="dim")
+        footer_text.append(" | ", style="dim")
+        footer_text.append(f"Uptime: {self._get_uptime()}", style="dim")
+        
+        # Combine table and footer
+        content = [table, "", Align.center(footer_text)]
+        
+        return Panel(
+            "\n".join(str(item) for item in content), 
+            title="[bold green]📊 System Metrics[/bold green]", 
+            border_style="green",
+            padding=(1, 2)
+        )
+
+    def _get_uptime(self) -> str:
+        """Get system uptime"""
+        try:
+            boot_time = psutil.boot_time()
+            uptime_seconds = time.time() - boot_time
+            
+            days = int(uptime_seconds // 86400)
+            hours = int((uptime_seconds % 86400) // 3600)
+            minutes = int((uptime_seconds % 3600) // 60)
+            
+            if days > 0:
+                return f"{days}d {hours}h {minutes}m"
+            elif hours > 0:
+                return f"{hours}h {minutes}m"
+            else:
+                return f"{minutes}m"
+        except:
+            return "Unknown" 

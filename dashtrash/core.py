@@ -12,6 +12,7 @@ from rich.live import Live
 from rich.layout import Layout
 from rich.panel import Panel
 from rich.text import Text
+from rich.align import Align
 
 from .config import Config
 from .banner import Banner
@@ -65,22 +66,23 @@ class Dashboard:
         layout = Layout()
         
         panel_configs = self.config.get_panels()
+        num_panels = len(panel_configs)
         
-        if len(panel_configs) == 1:
+        if num_panels == 1:
             # Single panel layout
             layout.add_split(Layout(name="main"))
-        elif len(panel_configs) == 2:
-            # Two panel layout (top/bottom or left/right)
+        elif num_panels == 2:
+            # Two panel layout (top/bottom)
             layout.split_column(
-                Layout(name="top"),
-                Layout(name="bottom")
+                Layout(name="top", ratio=1),
+                Layout(name="bottom", ratio=1)
             )
         else:
-            # Multi-panel layout
+            # Multi-panel layout (top, middle row with left/right, bottom)
             layout.split_column(
-                Layout(name="top"),
-                Layout(name="middle", ratio=2),
-                Layout(name="bottom")
+                Layout(name="top", ratio=1),
+                Layout(name="middle", ratio=1),
+                Layout(name="bottom", ratio=1)
             )
             layout["middle"].split_row(
                 Layout(name="left"),
@@ -95,9 +97,10 @@ class Dashboard:
         
         for i, panel_config in enumerate(panel_configs):
             panel_type = panel_config.get('type')
-            position = panel_config.get('position', 'main')
+            position = panel_config.get('position', None)
             
             try:
+                # Generate panel content
                 if panel_type == 'system' and 'system' in self.panels:
                     data = self.panels['system'].fetch_data()
                     panel = self.panels['system'].render(data)
@@ -114,28 +117,41 @@ class Dashboard:
                     panel = Panel(f"[red]Unknown panel type: {panel_type}[/red]", 
                                 title="[bold red]Error[/bold red]")
                 
-                # Place panel in layout
-                if position in layout:
-                    layout[position].update(panel)
-                elif len(panel_configs) == 1:
-                    layout["main"].update(panel)
-                elif i == 0 and "top" in layout:
-                    layout["top"].update(panel)
-                elif i == 1 and "bottom" in layout:
-                    layout["bottom"].update(panel)
-                else:
-                    # Fallback positioning
-                    available_positions = ["top", "bottom", "left", "right", "middle"]
-                    for pos in available_positions:
-                        if pos in layout:
-                            layout[pos].update(panel)
-                            break
-                            
+                # Place panel in correct layout position
+                target_position = self._get_panel_position(i, position, layout)
+                if target_position and target_position in layout:
+                    layout[target_position].update(panel)
+                    
             except Exception as e:
                 error_panel = Panel(f"[red]Error in {panel_type} panel: {str(e)}[/red]", 
                                   title="[bold red]Panel Error[/bold red]")
-                if position in layout:
-                    layout[position].update(error_panel)
+                target_position = self._get_panel_position(i, position, layout)
+                if target_position and target_position in layout:
+                    layout[target_position].update(error_panel)
+
+    def _get_panel_position(self, panel_index: int, configured_position: str, layout: Layout) -> str:
+        """Determine where to place a panel in the layout"""
+        # If position is explicitly configured and exists, use it
+        if configured_position and configured_position in layout:
+            return configured_position
+        
+        # Otherwise, use index-based positioning
+        available_positions = []
+        
+        # Check what positions exist in the layout
+        if "main" in layout:
+            available_positions = ["main"]
+        elif "top" in layout and "bottom" in layout:
+            available_positions = ["top", "bottom"]
+            if "left" in layout and "right" in layout:
+                available_positions.extend(["left", "right"])
+        
+        # Return position based on panel index
+        if panel_index < len(available_positions):
+            return available_positions[panel_index]
+        else:
+            # Fallback to first available position
+            return available_positions[0] if available_positions else "main"
 
     def _render_plugin_panel(self, plugin_name: str, config: Dict[str, Any]) -> Panel:
         """Render a plugin panel"""
@@ -164,18 +180,18 @@ class Dashboard:
             return Panel(f"[red]Plugin error: {str(e)}[/red]", 
                         title="[bold red]Plugin Error[/bold red]")
 
-    def _create_status_footer(self) -> Panel:
-        """Create status footer with dashboard info"""
-        current_time = time.strftime("%H:%M:%S")
-        panel_count = len(self.config.get_panels())
+    def _create_header(self) -> Panel:
+        """Create header with dashboard title and time"""
+        current_time = time.strftime("%Y-%m-%d %H:%M:%S")
+        header_text = Text()
+        header_text.append("📊 ", style="bold blue")
+        header_text.append("dashtrash", style="bold green")
+        header_text.append(" | ", style="dim")
+        header_text.append(f"{current_time}", style="bold white")
+        header_text.append(" | ", style="dim")
+        header_text.append("Press Ctrl+C to quit", style="yellow")
         
-        status_text = Text()
-        status_text.append(f"Time: {current_time} | ", style="dim")
-        status_text.append(f"Panels: {panel_count} | ", style="dim")
-        status_text.append(f"Refresh: {self.refresh_rate}s | ", style="dim")
-        status_text.append("Press Ctrl+C to quit", style="bold yellow")
-        
-        return Panel(status_text, height=3, border_style="dim")
+        return Panel(Align.center(header_text), height=3, border_style="blue")
 
     async def run(self):
         """Run the dashboard main loop"""
@@ -186,42 +202,45 @@ class Dashboard:
         # Show banner
         self.banner.show()
         
-        # Create layout
-        layout = self._create_layout()
+        # Create main layout with header
+        main_layout = Layout()
+        main_layout.split_column(
+            Layout(name="header", size=3),
+            Layout(name="content")
+        )
+        
+        # Create content layout for panels
+        content_layout = self._create_layout()
+        main_layout["content"].update(content_layout)
+        
         self.running = True
         
-        with Live(layout, console=self.console, refresh_per_second=1/self.refresh_rate) as live:
+        with Live(main_layout, console=self.console, refresh_per_second=2) as live:
             try:
                 while self.running:
+                    # Update header
+                    main_layout["header"].update(self._create_header())
+                    
                     # Update all panels
-                    self._update_layout(layout)
+                    self._update_layout(content_layout)
                     
-                    # Add status footer if there's space
-                    try:
-                        main_layout = Layout()
-                        main_layout.split_column(
-                            Layout(layout, ratio=4),
-                            Layout(self._create_status_footer(), size=3)
-                        )
-                        live.update(main_layout)
-                    except Exception:
-                        # Fallback to just the main layout
-                        live.update(layout)
-                    
+                    # Wait for next refresh
                     await asyncio.sleep(self.refresh_rate)
                     
             except KeyboardInterrupt:
-                pass
-            except Exception as e:
-                self.console.print(f"[red]Dashboard error: {e}[/red]")
-            finally:
                 self.running = False
+            except Exception as e:
+                self.console.print(f"[red]Dashboard error: {str(e)}[/red]")
+                self.running = False
+        
+        self.console.print("[green]Dashboard stopped.[/green]")
 
     def start(self):
-        """Start the dashboard (entry point)"""
+        """Start the dashboard (blocking)"""
         try:
             asyncio.run(self.run())
         except KeyboardInterrupt:
-            pass
-        finally:
-            self.console.print("[green]Dashboard stopped.[/green]") 
+            self.console.print("\n[yellow]Dashboard interrupted by user[/yellow]")
+        except Exception as e:
+            self.console.print(f"[red]Dashboard error: {str(e)}[/red]")
+            sys.exit(1) 
