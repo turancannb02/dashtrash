@@ -9,7 +9,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.progress import Progress, BarColumn, TextColumn, SpinnerColumn
 from rich.text import Text
-from rich.console import Console
+from rich.console import Console, Group
 from rich.columns import Columns
 from rich.align import Align
 
@@ -246,10 +246,10 @@ class SystemPanel:
         footer_text.append(f"Uptime: {self._get_uptime()}", style="dim")
         
         # Combine table and footer
-        content = [table, "", Align.center(footer_text)]
+        content = Group(table, "", Align.center(footer_text))
         
         return Panel(
-            "\n".join(str(item) for item in content), 
+            content, 
             title="[bold green]📊 System Metrics[/bold green]", 
             border_style="green",
             padding=(1, 2)
