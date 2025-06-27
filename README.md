@@ -63,21 +63,39 @@
 ### Option 1: One-liner Install (Recommended)
 
 ```bash
+# Standard installation (handles externally-managed environments)
 curl -sSL https://raw.githubusercontent.com/turancannb02/dashtrash/main/install.sh | bash
+
+# Or using pipx (recommended for Python applications)
+curl -sSL https://raw.githubusercontent.com/turancannb02/dashtrash/main/install-pipx.sh | bash
 ```
 
-### Option 2: Install from Source
+### Option 2: Install via pipx (Best for Python apps)
+
+```bash
+# Install pipx if you don't have it
+brew install pipx  # macOS
+# or: pip install --user pipx
+
+# Install dashtrash
+git clone https://github.com/turancannb02/dashtrash.git
+cd dashtrash
+pipx install .
+```
+
+### Option 3: Install from Source
 
 ```bash
 git clone https://github.com/turancannb02/dashtrash.git
 cd dashtrash
+
+# Create virtual environment (recommended)
+python3 -m venv venv
+source venv/bin/activate
 pip install -e .
-```
 
-### Option 3: Install via pip (Coming Soon)
-
-```bash
-pip install dashtrash
+# Or install to user directory
+pip install -e . --user
 ```
 
 ### 🎯 **Run dashtrash**
