@@ -190,36 +190,57 @@ class Dashboard:
 
     def _get_panel_position(self, panel_index: int, configured_position: str, layout: Layout) -> str:
         """Determine where to place a panel in the layout"""
-        # If position is explicitly configured, use it
+        # If position is explicitly configured, use it if it exists
         if configured_position:
             try:
                 # Test if the position exists by trying to access it
                 _ = layout[configured_position]
                 return configured_position
             except KeyError:
-                pass  # Position doesn't exist, fall back to index-based
+                # Position doesn't exist in current layout, continue to fallback logic
+                pass
         
-        # Get panel count to determine layout structure
+        # Get panel configurations to understand layout structure
         panel_configs = self.config.get_panels()
-        num_panels = len(panel_configs)
+        positions = set()
+        for panel_config in panel_configs:
+            pos = panel_config.get('position')
+            if pos:
+                positions.add(pos)
         
-        # Return position based on layout structure and panel index
-        if num_panels == 1:
+        # Fallback logic based on actual layout structure created
+        if len(positions) <= 1:
             return "main"
-        elif num_panels == 2:
+        elif positions == {"left", "right"}:
             return ["left", "right"][panel_index % 2]
-        elif num_panels == 3:
-            # First two panels go left/right in top row, third goes to bottom
-            if panel_index == 0:
-                return "left"
-            elif panel_index == 1:
-                return "right"
+        elif "top" in positions and len(positions) == 3:
+            # Layout: top, bottom_row with left/right
+            if configured_position == "top":
+                return "top"
+            elif configured_position in ["left", "right"]:
+                return configured_position
             else:
-                return "bottom"
+                # Fallback for panels without specific position
+                return ["top", "left", "right"][panel_index % 3]
+        elif "top" in positions and "bottom" in positions:
+            # Layout: top, middle (left/right), bottom
+            if configured_position in ["top", "bottom"]:
+                return configured_position
+            elif configured_position in ["left", "right"]:
+                return configured_position
+            else:
+                # Fallback
+                return ["top", "left", "right", "bottom"][panel_index % 4]
         else:
-            # Four or more panels: top, left, right, bottom, then cycle
-            positions = ["top", "left", "right", "bottom"]
-            return positions[panel_index % len(positions)]
+            # Default multi-panel layout: top, middle (left/right)
+            num_panels = len(panel_configs)
+            if num_panels == 1:
+                return "main"
+            elif num_panels == 2:
+                return ["left", "right"][panel_index % 2]
+            else:
+                # Map to: top, left, right for 3+ panels
+                return ["top", "left", "right"][panel_index % 3]
 
     def _render_plugin_panel(self, plugin_name: str, config: Dict[str, Any]) -> Panel:
         """Render a plugin panel"""

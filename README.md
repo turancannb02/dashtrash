@@ -266,6 +266,27 @@ pip install -r requirements.txt
 python -m dashtrash.main  # Watch the magic happen
 ```
 
+### 🚀 Convenient Alias Setup
+
+If you're running from source or want easier access, add this handy alias to your shell:
+
+```bash
+# Add to ~/.zshrc, ~/.bashrc, or ~/.bash_profile
+alias dashtrash='cd /path/to/your/dashtrash && source venv/bin/activate && dashtrash'
+
+# Or for development:
+alias dashtrash-dev='cd /path/to/your/dashtrash && source venv/bin/activate && python main.py'
+```
+
+Then reload your shell:
+```bash
+source ~/.zshrc  # or ~/.bashrc
+```
+
+Now you can run `dashtrash` from anywhere! 🎉
+
+**Pro tip:** Replace `/path/to/your/dashtrash` with your actual project path. We're not mind readers (yet).
+
 ---
 
 ## 🎨 Color Coding
