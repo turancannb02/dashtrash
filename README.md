@@ -2,10 +2,25 @@
 
 ### *Real-time dashboards. Questionable aesthetics.*
 
-[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://python.org)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![GitHub Stars](https://img.shields.io/github/stars/turancannb02/dashtrash?style=social)](https://github.com/turancannb02/dashtrash/stargazers)
-[![Homebrew](https://img.shields.io/badge/Homebrew-Available-orange.svg)](https://github.com/turancannb02/homebrew-dashtrash)
+<div align="center">
+
+[![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![License](https://img.shields.io/badge/License-MIT-brightgreen?style=for-the-badge&logo=opensourceinitiative&logoColor=white)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Linux-lightgrey?style=for-the-badge&logo=apple&logoColor=white)](#)
+
+[![GitHub Stars](https://img.shields.io/github/stars/turancannb02/dashtrash?style=for-the-badge&logo=github&color=yellow&logoColor=black)](https://github.com/turancannb02/dashtrash/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/turancannb02/dashtrash?style=for-the-badge&logo=github&color=blue&logoColor=white)](https://github.com/turancannb02/dashtrash/network)
+[![GitHub Issues](https://img.shields.io/github/issues/turancannb02/dashtrash?style=for-the-badge&logo=github&color=red&logoColor=white)](https://github.com/turancannb02/dashtrash/issues)
+
+[![Homebrew](https://img.shields.io/badge/Homebrew-Available-FBB040?style=for-the-badge&logo=homebrew&logoColor=black)](https://github.com/turancannb02/homebrew-dashtrash)
+[![pipx](https://img.shields.io/badge/pipx-Ready-306998?style=for-the-badge&logo=python&logoColor=white)](#)
+[![Terminal](https://img.shields.io/badge/Terminal-Only-1D1D1D?style=for-the-badge&logo=gnometerminal&logoColor=white)](#)
+
+[![Aesthetic](https://img.shields.io/badge/Aesthetic-Questionable-FF69B4?style=for-the-badge&logo=heart&logoColor=white)](#)
+[![Vibes](https://img.shields.io/badge/Vibes-Immaculate-9932CC?style=for-the-badge&logo=sparkles&logoColor=white)](#)
+[![Made with](https://img.shields.io/badge/Made%20with-☕%20Coffee%20&%20💻%20Love-8B4513?style=for-the-badge)](#)
+
+</div>
 
 **A beautifully ugly terminal dashboard for people who live in the command line**
 
@@ -281,7 +296,7 @@ MIT License - basically do whatever you want, just don't blame us if your termin
 
 ### 🌟 Star this repo if you love questionable aesthetics! 🌟
 
-[![GitHub stars](https://img.shields.io/github/stars/turancannb02/dashtrash?style=social)](https://github.com/turancannb02/dashtrash/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/turancannb02/dashtrash?style=for-the-badge&logo=github&color=yellow)](https://github.com/turancannb02/dashtrash/stargazers)
 
 **Made with ❤️ and way too much coffee**
 
