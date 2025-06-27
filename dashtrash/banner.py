@@ -28,12 +28,15 @@ class Banner:
         # Create styled text
         banner_text = Text(ascii_art, style="bold cyan")
         tagline_text = Text(f'> "{self.tagline}"', style="italic yellow")
+        author_text = Text("Made by Turan Buyukkamaci", style="dim white")
         
-        # Combine banner and tagline
+        # Combine banner, tagline, and author
         content = Text()
         content.append(banner_text)
         content.append("\n")
         content.append(tagline_text)
+        content.append("\n\n")
+        content.append(author_text)
         
         # Create panel
         panel = Panel(

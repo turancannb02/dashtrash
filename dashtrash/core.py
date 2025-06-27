@@ -16,7 +16,7 @@ from rich.align import Align
 
 from .config import Config
 from .banner import Banner
-from .panels import SystemPanel, LogsPanel
+from .panels import SystemPanel, LogsPanel, TemperaturePanel, ClockPanel
 from .plugins import PluginManager
 
 
@@ -52,6 +52,10 @@ class Dashboard:
                 self.panels['system'] = SystemPanel(panel_config)
             elif panel_type == 'logs':
                 self.panels['logs'] = LogsPanel(panel_config)
+            elif panel_type == 'temperature':
+                self.panels['temperature'] = TemperaturePanel(panel_config)
+            elif panel_type == 'clock':
+                self.panels['clock'] = ClockPanel(panel_config)
             elif panel_type == 'plugin':
                 plugin_name = panel_config.get('plugin_name')
                 if plugin_name:
@@ -108,6 +112,14 @@ class Dashboard:
                 elif panel_type == 'logs' and 'logs' in self.panels:
                     data = self.panels['logs'].fetch_data()
                     panel = self.panels['logs'].render(data)
+                    
+                elif panel_type == 'temperature' and 'temperature' in self.panels:
+                    data = self.panels['temperature'].fetch_data()
+                    panel = self.panels['temperature'].render(data)
+                    
+                elif panel_type == 'clock' and 'clock' in self.panels:
+                    data = self.panels['clock'].fetch_data()
+                    panel = self.panels['clock'].render(data)
                     
                 elif panel_type == 'plugin':
                     plugin_name = panel_config.get('plugin_name')
