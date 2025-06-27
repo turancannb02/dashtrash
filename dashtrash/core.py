@@ -66,23 +66,40 @@ class Dashboard:
                     }
 
     def _create_layout(self) -> Layout:
-        """Create the main dashboard layout"""
+        """Create the main dashboard layout based on configured positions"""
         layout = Layout()
         
         panel_configs = self.config.get_panels()
-        num_panels = len(panel_configs)
         
-        if num_panels == 1:
-            # Single panel layout
-            layout.add_split(Layout(name="main"))
-        elif num_panels == 2:
-            # Two panel layout (top/bottom)
+        # Collect all configured positions
+        positions = set()
+        for panel_config in panel_configs:
+            pos = panel_config.get('position')
+            if pos:
+                positions.add(pos)
+        
+        # Create layout based on actual positions used
+        if len(positions) <= 1:
+            # Single position layout
+            layout.add_split(Layout(name=next(iter(positions)) if positions else "main"))
+        elif positions == {"left", "right"}:
+            # Two panel side-by-side layout
+            layout.split_row(
+                Layout(name="left", ratio=1),
+                Layout(name="right", ratio=1)
+            )
+        elif "top" in positions and len(positions) == 3:
+            # Three panel layout with top, left, right
             layout.split_column(
                 Layout(name="top", ratio=1),
-                Layout(name="bottom", ratio=1)
+                Layout(name="bottom_row", ratio=1)
             )
-        else:
-            # Multi-panel layout (top, middle row with left/right, bottom)
+            layout["bottom_row"].split_row(
+                Layout(name="left"),
+                Layout(name="right")
+            )
+        elif "top" in positions and "bottom" in positions:
+            # Four panel layout: top, left, right, bottom
             layout.split_column(
                 Layout(name="top", ratio=1),
                 Layout(name="middle", ratio=1),
@@ -92,6 +109,26 @@ class Dashboard:
                 Layout(name="left"),
                 Layout(name="right")
             )
+        else:
+            # Default layout based on number of panels
+            num_panels = len(panel_configs)
+            if num_panels == 1:
+                layout.add_split(Layout(name="main"))
+            elif num_panels == 2:
+                layout.split_row(
+                    Layout(name="left", ratio=1),
+                    Layout(name="right", ratio=1)
+                )
+            else:
+                # Multi-panel default layout
+                layout.split_column(
+                    Layout(name="top", ratio=1),
+                    Layout(name="middle", ratio=1)
+                )
+                layout["middle"].split_row(
+                    Layout(name="left"),
+                    Layout(name="right")
+                )
         
         return layout
 
@@ -162,26 +199,27 @@ class Dashboard:
             except KeyError:
                 pass  # Position doesn't exist, fall back to index-based
         
-        # Otherwise, use index-based positioning
-        available_positions = []
+        # Get panel count to determine layout structure
+        panel_configs = self.config.get_panels()
+        num_panels = len(panel_configs)
         
-        # Check what positions exist in the layout by testing access
-        for pos in ["main", "top", "bottom", "left", "right"]:
-            try:
-                _ = layout[pos]
-                available_positions.append(pos)
-            except KeyError:
-                continue
-        
-        # Return position based on panel index
-        if panel_index < len(available_positions):
-            return available_positions[panel_index]
-        elif available_positions:
-            # Fallback to first available position
-            return available_positions[0]
-        else:
-            # If no positions found, try to create a default one
+        # Return position based on layout structure and panel index
+        if num_panels == 1:
             return "main"
+        elif num_panels == 2:
+            return ["left", "right"][panel_index % 2]
+        elif num_panels == 3:
+            # First two panels go left/right in top row, third goes to bottom
+            if panel_index == 0:
+                return "left"
+            elif panel_index == 1:
+                return "right"
+            else:
+                return "bottom"
+        else:
+            # Four or more panels: top, left, right, bottom, then cycle
+            positions = ["top", "left", "right", "bottom"]
+            return positions[panel_index % len(positions)]
 
     def _render_plugin_panel(self, plugin_name: str, config: Dict[str, Any]) -> Panel:
         """Render a plugin panel"""
