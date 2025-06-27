@@ -25,7 +25,7 @@ fi
 
 echo "✅ Python $PYTHON_VERSION detected"
 
-# Install dashtrash using virtual environment to avoid externally-managed-environment issues
+# Install dashtrash using virtual environment
 echo "📦 Installing dashtrash..."
 TEMP_DIR=$(mktemp -d)
 cd "$TEMP_DIR"
@@ -78,14 +78,12 @@ else
 fi
 
 echo ""
-echo "🎉 dashtrash installed successfully!"
+echo "🎉 dashtrash is ready to use!"
 echo ""
-
-# Provide usage instructions based on installation method
 echo "📋 Quick Start:"
-echo "  dashtrash                    # Run with default config"
+echo "  dashtrash --create-config    # Create default configuration"
+echo "  dashtrash                    # Run dashboard"
 echo "  dashtrash --help             # Show help"
-echo "  dashtrash --create-config    # Create default config file"
 
 echo ""
 echo "🔧 Configuration:"
@@ -93,9 +91,8 @@ echo "  Edit dashboard.yml to customize panels and settings"
 echo ""
 echo "📚 Documentation:"
 echo "  https://github.com/turancannb02/dashtrash"
-echo ""
 
-# Check if dashtrash is in PATH
+# Test if dashtrash is in PATH
 if command -v dashtrash &> /dev/null; then
     echo "✅ dashtrash is ready to use!"
 else
