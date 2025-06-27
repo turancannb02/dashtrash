@@ -119,8 +119,18 @@ class Dashboard:
                 
                 # Place panel in correct layout position
                 target_position = self._get_panel_position(i, position, layout)
-                if target_position and target_position in layout:
+                try:
                     layout[target_position].update(panel)
+                except KeyError:
+                    # If position doesn't exist, create a simple fallback
+                    self.console.print(f"[yellow]Warning: Layout position '{target_position}' not found[/yellow]")
+                    # Try to update the first available position or create a basic layout
+                    if hasattr(layout, 'children') and layout.children:
+                        layout.children[0].update(panel)
+                    else:
+                        # Create a basic layout if none exists
+                        layout.add_split(Layout(name="main"))
+                        layout["main"].update(panel)
                     
             except Exception as e:
                 error_panel = Panel(f"[red]Error in {panel_type} panel: {str(e)}[/red]", 
@@ -131,27 +141,35 @@ class Dashboard:
 
     def _get_panel_position(self, panel_index: int, configured_position: str, layout: Layout) -> str:
         """Determine where to place a panel in the layout"""
-        # If position is explicitly configured and exists, use it
-        if configured_position and configured_position in layout:
-            return configured_position
+        # If position is explicitly configured, use it
+        if configured_position:
+            try:
+                # Test if the position exists by trying to access it
+                _ = layout[configured_position]
+                return configured_position
+            except KeyError:
+                pass  # Position doesn't exist, fall back to index-based
         
         # Otherwise, use index-based positioning
         available_positions = []
         
-        # Check what positions exist in the layout
-        if "main" in layout:
-            available_positions = ["main"]
-        elif "top" in layout and "bottom" in layout:
-            available_positions = ["top", "bottom"]
-            if "left" in layout and "right" in layout:
-                available_positions.extend(["left", "right"])
+        # Check what positions exist in the layout by testing access
+        for pos in ["main", "top", "bottom", "left", "right"]:
+            try:
+                _ = layout[pos]
+                available_positions.append(pos)
+            except KeyError:
+                continue
         
         # Return position based on panel index
         if panel_index < len(available_positions):
             return available_positions[panel_index]
-        else:
+        elif available_positions:
             # Fallback to first available position
-            return available_positions[0] if available_positions else "main"
+            return available_positions[0]
+        else:
+            # If no positions found, try to create a default one
+            return "main"
 
     def _render_plugin_panel(self, plugin_name: str, config: Dict[str, Any]) -> Panel:
         """Render a plugin panel"""

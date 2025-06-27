@@ -4,37 +4,16 @@ Version: 0.1.0
 Summary: Terminal-based dashboard for real-time monitoring. Real-time dashboards. Questionable aesthetics.
 Author-email: dashtrash contributors <info@dashtrash.dev>
 Maintainer-email: dashtrash contributors <info@dashtrash.dev>
-License: MIT License
-        
-        Copyright (c) 2024 dashtrash contributors
-        
-        Permission is hereby granted, free of charge, to any person obtaining a copy
-        of this software and associated documentation files (the "Software"), to deal
-        in the Software without restriction, including without limitation the rights
-        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-        copies of the Software, and to permit persons to whom the Software is
-        furnished to do so, subject to the following conditions:
-        
-        The above copyright notice and this permission notice shall be included in all
-        copies or substantial portions of the Software.
-        
-        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-        SOFTWARE. 
-Project-URL: Homepage, https://github.com/yourusername/dashtrash
-Project-URL: Documentation, https://github.com/yourusername/dashtrash#readme
-Project-URL: Repository, https://github.com/yourusername/dashtrash.git
-Project-URL: Bug Tracker, https://github.com/yourusername/dashtrash/issues
+License-Expression: MIT
+Project-URL: Homepage, https://github.com/turancannb02/dashtrash
+Project-URL: Documentation, https://github.com/turancannb02/dashtrash#readme
+Project-URL: Repository, https://github.com/turancannb02/dashtrash.git
+Project-URL: Bug Tracker, https://github.com/turancannb02/dashtrash/issues
 Keywords: dashboard,monitoring,terminal,cli,tui,system,logs
 Classifier: Development Status :: 4 - Beta
 Classifier: Environment :: Console
 Classifier: Intended Audience :: Developers
 Classifier: Intended Audience :: System Administrators
-Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
 Classifier: Programming Language :: Python :: 3
 Classifier: Programming Language :: Python :: 3.8
@@ -63,9 +42,31 @@ Dynamic: license-file
 
 # 🗑️ dashtrash
 
-> **Real-time dashboards. Questionable aesthetics.**
+<div align="center">
 
-A terminal-based dashboard UI built entirely in the command line for real-time monitoring of system metrics, logs, and custom data sources — without relying on external SaaS dashboards or heavy GUI tools.
+![dashtrash-banner](https://img.shields.io/badge/dashtrash-Terminal%20Dashboard-blue?style=for-the-badge&logo=terminal&logoColor=white)
+
+[![PyPI version](https://img.shields.io/pypi/v/dashtrash?style=flat-square&color=blue)](https://pypi.org/project/dashtrash/)
+[![Python versions](https://img.shields.io/pypi/pyversions/dashtrash?style=flat-square)](https://pypi.org/project/dashtrash/)
+[![License](https://img.shields.io/github/license/turancannb02/dashtrash?style=flat-square)](https://github.com/turancannb02/dashtrash/blob/main/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/turancannb02/dashtrash?style=flat-square)](https://github.com/turancannb02/dashtrash/stargazers)
+[![Downloads](https://img.shields.io/pypi/dm/dashtrash?style=flat-square&color=green)](https://pypi.org/project/dashtrash/)
+
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/turancannb02/dashtrash/test.yml?style=flat-square&label=tests)](https://github.com/turancannb02/dashtrash/actions)
+[![Homebrew](https://img.shields.io/badge/Homebrew-Available-orange?style=flat-square&logo=homebrew)](https://github.com/turancannb02/dashtrash)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue?style=flat-square&logo=docker)](https://github.com/turancannb02/dashtrash/pkgs/container/dashtrash)
+
+</div>
+
+---
+
+<div align="center">
+
+## **Real-time dashboards. Questionable aesthetics.** 🗑️✨
+
+*A terminal-based dashboard UI built entirely in the command line for real-time monitoring of system metrics, logs, and custom data sources — without relying on external SaaS dashboards or heavy GUI tools.*
+
+</div>
 
 ## ✨ Features
 
@@ -78,36 +79,37 @@ A terminal-based dashboard UI built entirely in the command line for real-time m
 
 ## 🚀 Quick Start
 
-### Option 1: Install via pip (Recommended)
+### Option 1: Install from source (Currently Available)
 
 ```bash
-# Install globally
-pip install dashtrash
-
-# Or install for current user only
-pip install --user dashtrash
+# Clone and install
+git clone https://github.com/turancannb02/dashtrash.git
+cd dashtrash
+pip install -e .
 
 # Run it!
 dashtrash
 ```
 
-### Option 2: One-liner install script
+### Option 2: Install via pip (Coming Soon)
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/yourusername/dashtrash/main/install.sh | bash
+# Will be available once published to PyPI
+pip install dashtrash
 ```
 
-### Option 3: Install via Homebrew (macOS/Linux)
+### Option 3: Install via Homebrew (Coming Soon)
 
 ```bash
-brew tap yourusername/dashtrash
+# Will be available once tap is set up
+brew tap turancannb02/dashtrash
 brew install dashtrash
 ```
 
 ### Option 4: Development setup
 
 ```bash
-git clone https://github.com/yourusername/dashtrash.git
+git clone https://github.com/turancannb02/dashtrash.git
 cd dashtrash
 
 # Create virtual environment
@@ -238,41 +240,57 @@ Then add it to your `dashboard.yml`:
 
 ```
 dashtrash/
-├── dashboard/
-│   ├── __init__.py
-│   ├── banner.py          # ASCII art and startup display
-│   ├── config.py          # YAML configuration handling
-│   ├── core.py            # Main dashboard engine
+├── .github/workflows/     # GitHub Actions (CI/CD)
+│   ├── publish.yml        # PyPI publishing
+│   └── test.yml          # Multi-platform testing
+├── dashtrash/            # Main package
+│   ├── __init__.py       # Package initialization
+│   ├── banner.py         # ASCII art and startup display
+│   ├── config.py         # YAML configuration handling
+│   ├── core.py           # Main dashboard engine
+│   ├── main.py           # CLI entry point
 │   ├── panels/
-│   │   ├── __init__.py
-│   │   ├── system.py      # System metrics panel
-│   │   └── logs.py        # Log viewer panel
+│   │   ├── __init__.py   # Panels package
+│   │   ├── system.py     # System metrics panel
+│   │   └── logs.py       # Log viewer panel
 │   └── plugins/
-│       ├── __init__.py    # Plugin management
-│       └── demo.py        # Example plugin
-├── dashboard.yml          # Configuration file
-├── main.py               # Entry point
-├── requirements.txt      # Dependencies
-└── README.md            # This file
+│       ├── __init__.py   # Plugin management
+│       └── demo.py       # Example plugin
+├── docs/                 # Documentation
+│   └── INSTALLATION.md   # Detailed install guide
+├── scripts/              # Utility scripts
+│   ├── install-brew.sh   # Homebrew installer
+│   └── release.sh        # Release automation
+├── snap/                 # Snap package config
+│   └── snapcraft.yaml    # Snap build configuration
+├── dashboard.yml         # Default configuration
+├── main.py              # Development entry point
+├── pyproject.toml       # Python package configuration
+├── requirements.txt     # Dependencies
+├── install.sh           # One-liner installer
+├── Dockerfile           # Container image
+├── Brewfile            # Homebrew formula
+├── LICENSE             # MIT license
+└── README.md           # This file
 ```
 
 ## 🛠️ CLI Commands
 
 ```bash
 # Show help
-python main.py --help
+dashtrash --help
 
 # Create default configuration
-python main.py --create-config
+dashtrash --create-config
 
 # Validate configuration
-python main.py --validate
+dashtrash --validate
 
 # Run with custom config
-python main.py -c custom.yml
+dashtrash -c custom.yml
 
 # Show version
-python main.py --version
+dashtrash --version
 ```
 
 ## 🎨 Customization
@@ -316,16 +334,58 @@ dashtrash gives you:
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+We welcome contributions! Here's how you can help:
+
+1. **⭐ Star the repository** if you find it useful
+2. **🐛 Report bugs** via [GitHub Issues](https://github.com/turancannb02/dashtrash/issues)
+3. **💡 Suggest features** via [GitHub Discussions](https://github.com/turancannb02/dashtrash/discussions)
+4. **🔧 Submit improvements**:
+   ```bash
+   # Fork the repository
+   git clone https://github.com/turancannb02/dashtrash.git
+   cd dashtrash
+   
+   # Create feature branch
+   git checkout -b feature/amazing-feature
+   
+   # Make changes and commit
+   git commit -m 'Add amazing feature'
+   
+   # Push and create Pull Request
+   git push origin feature/amazing-feature
+   ```
+
+<div align="center">
+
+### 📊 Project Stats
+
+![GitHub stars](https://img.shields.io/github/stars/turancannb02/dashtrash?style=social)
+![GitHub forks](https://img.shields.io/github/forks/turancannb02/dashtrash?style=social)
+![GitHub watchers](https://img.shields.io/github/watchers/turancannb02/dashtrash?style=social)
+
+[![GitHub issues](https://img.shields.io/github/issues/turancannb02/dashtrash?style=flat-square)](https://github.com/turancannb02/dashtrash/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/turancannb02/dashtrash?style=flat-square)](https://github.com/turancannb02/dashtrash/pulls)
+[![GitHub contributors](https://img.shields.io/github/contributors/turancannb02/dashtrash?style=flat-square)](https://github.com/turancannb02/dashtrash/graphs/contributors)
+
+</div>
 
 ## 📄 License
 
-MIT License - see LICENSE file for details.
+MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-**Real-time dashboards. Questionable aesthetics.** 🗑️✨ 
+<div align="center">
+
+### 🌟 Show Your Support
+
+If dashtrash helps you monitor your systems better, consider:
+
+[![Star this repository](https://img.shields.io/badge/⭐-Star%20this%20repository-yellow?style=for-the-badge)](https://github.com/turancannb02/dashtrash/stargazers)
+[![Follow @turancannb02](https://img.shields.io/badge/Follow-%40turancannb02-blue?style=for-the-badge&logo=github)](https://github.com/turancannb02)
+
+**Real-time dashboards. Questionable aesthetics.** 🗑️✨
+
+*Made with ❤️ for the terminal enthusiasts*
+
+</div> 

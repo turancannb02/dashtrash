@@ -12,7 +12,7 @@ class Dashtrash < Formula
 
   resource "rich" do
     url "https://files.pythonhosted.org/packages/source/r/rich/rich-14.0.0.tar.gz"
-    sha256 "8260cda28e3db6bf04d2d1ef4dbc03ba80a824c88b0e7668a0f23126a424844a"
+    sha256 "82f1bc23a6a21ebca4ae0c45af9bdbc492ed20231dcb63f297d6d1021a9d5725"
   end
 
   resource "psutil" do

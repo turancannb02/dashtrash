@@ -25,76 +25,67 @@ fi
 
 echo "✅ Python $PYTHON_VERSION detected"
 
-# Install dashtrash
+# Install dashtrash using virtual environment to avoid externally-managed-environment issues
 echo "📦 Installing dashtrash..."
-
-# Try pip3 first, then pip
-if command -v pip3 &> /dev/null; then
-    PIP_CMD="pip3"
-elif command -v pip &> /dev/null; then
-    PIP_CMD="pip"
-else
-    echo "❌ pip is not available. Please install pip and try again."
-    exit 1
-fi
-
-# Install from source
-echo "📥 Cloning dashtrash repository..."
 TEMP_DIR=$(mktemp -d)
 cd "$TEMP_DIR"
 
 if command -v git &> /dev/null; then
+    echo "📥 Cloning dashtrash repository..."
     git clone https://github.com/turancannb02/dashtrash.git
     cd dashtrash
-    echo "🔧 Installing dashtrash..."
     
-    # Try different installation methods in order of preference
-    if $PIP_CMD install -e . --user 2>/dev/null; then
-        echo "✅ Installed dashtrash to user directory"
-        INSTALL_METHOD="user"
-    elif $PIP_CMD install -e . --break-system-packages 2>/dev/null; then
-        echo "✅ Installed dashtrash system-wide (with override)"
-        INSTALL_METHOD="system"
-    else
-        echo "🔧 Creating virtual environment for dashtrash..."
-        python3 -m venv ~/.dashtrash-venv
-        source ~/.dashtrash-venv/bin/activate
-        $PIP_CMD install -e .
-        INSTALL_METHOD="venv"
-        echo "✅ Installed dashtrash in virtual environment"
+    echo "🔧 Creating virtual environment..."
+    python3 -m venv venv
+    source venv/bin/activate
+    
+    echo "🔧 Installing dashtrash..."
+    pip install --upgrade pip
+    pip install .
+    
+    # Create a global launcher script in a permanent location
+    INSTALL_DIR="$HOME/.local/bin"
+    VENV_DIR="$HOME/.dashtrash-venv"
+    mkdir -p "$INSTALL_DIR"
+    
+    # Move the virtual environment to a permanent location
+    cp -r venv "$VENV_DIR"
+    
+    # Create wrapper script
+    cat > "$INSTALL_DIR/dashtrash" << EOF
+#!/bin/bash
+source "$VENV_DIR/bin/activate"
+exec python -m dashtrash "\$@"
+EOF
+    
+    chmod +x "$INSTALL_DIR/dashtrash"
+    
+    # Add to PATH if not already there
+    if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+        echo "🔧 Adding $INSTALL_DIR to PATH..."
+        if [[ "$SHELL" == *"zsh"* ]]; then
+            echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+        else
+            echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+        fi
     fi
+    
+    echo "✅ dashtrash installed successfully!"
 else
     echo "❌ git is required but not installed."
-    echo "Please install git or use manual installation:"
-    echo "  git clone https://github.com/turancannb02/dashtrash.git"
-    echo "  cd dashtrash"
-    echo "  pip3 install -e . --user"
+    echo "Please install git and try again."
     exit 1
 fi
-
-# Clean up
-cd ~
-rm -rf "$TEMP_DIR"
 
 echo ""
 echo "🎉 dashtrash installed successfully!"
 echo ""
 
 # Provide usage instructions based on installation method
-if [ "$INSTALL_METHOD" = "venv" ]; then
-    echo "📋 To use dashtrash:"
-    echo "  source ~/.dashtrash-venv/bin/activate"
-    echo "  dashtrash"
-    echo ""
-    echo "💡 Add this alias to your shell profile for easy access:"
-    echo "  echo 'alias dashtrash=\"source ~/.dashtrash-venv/bin/activate && dashtrash\"' >> ~/.zshrc"
-    echo "  source ~/.zshrc"
-else
-    echo "📋 Quick Start:"
-    echo "  dashtrash                    # Run with default config"
-    echo "  dashtrash --help             # Show help"
-    echo "  dashtrash --create-config    # Create default config file"
-fi
+echo "📋 Quick Start:"
+echo "  dashtrash                    # Run with default config"
+echo "  dashtrash --help             # Show help"
+echo "  dashtrash --create-config    # Create default config file"
 
 echo ""
 echo "🔧 Configuration:"
@@ -109,11 +100,9 @@ if command -v dashtrash &> /dev/null; then
     echo "✅ dashtrash is ready to use!"
 else
     echo "⚠️  dashtrash may not be in your PATH."
-    if [ "$INSTALL_METHOD" = "user" ]; then
-        echo "   Try adding ~/.local/bin to your PATH:"
-        echo "   echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.zshrc"
-        echo "   source ~/.zshrc"
-    fi
+    echo "   Try adding ~/.local/bin to your PATH:"
+    echo "   echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.zshrc"
+    echo "   source ~/.zshrc"
 fi
 
 echo ""
